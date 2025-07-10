@@ -13,9 +13,10 @@ library(car)
 library(nortest)
 library(lmtest)
 
-df <- read.csv("clases hamdi/tarearl/datasets/CarPrice_Assignment_Clean.csv", row.names='car_ID')
+df <- read.csv("datasets/CarPrice_Assignment_Clean.csv", row.names='car_ID')
 df$fueltype_gas <- as.numeric(df$fueltype_gas == "True")
 df$engine_class_performance <- as.numeric(df$engine_class_performance == "True")
+# We do the corresponding transformations
 df$price <- log(df$price)
 df$curbweight <- log(df$curbweight)
 df$power_efficiency <- df$horsepower / df$citympg
@@ -23,6 +24,7 @@ glimpse(df)
 str(df)
 dim(df)
 
+# Important variables
 vars_importantes <- c("price", "curbweight", "enginesize", "power_efficiency", 
                         "carlength", "carwidth", "wheelbase", "boreratio",
                         "engine_class_performance", "fueltype_gas","symboling"
@@ -31,7 +33,7 @@ vars_importantes <- c("price", "curbweight", "enginesize", "power_efficiency",
 cor_kendall <- cor(df[ , vars_importantes], method = "kendall", use = "pairwise.complete.obs")
 
 # Guardar en archivo PNG
-png("clases hamdi/tarearl/graficos/corrplot.png",
+png("graficos/corrplot.png",
     width = 4000, height = 4000, res = 400)
 
 # Corrplot con método mixto
@@ -53,7 +55,7 @@ pc_all <- pcor(df[, vars_importantes])          # matriz de correlaciones parcia
 round(pc_all$estimate, 2)
 round(pc_all$p.value , 3)
 mat_corr_parcial <- round(pc_all$estimate, 2)
-png("clases hamdi/tarearl/graficos/correlacion_parcial.png", width = 2000, height = 2000, res = 300)
+png("graficos/correlacion_parcial.png", width = 2000, height = 2000, res = 300)
 corrplot(mat_corr_parcial,
          method = "color",         # o "circle", "number", "shade", etc.
          type = "upper",
@@ -65,7 +67,7 @@ corrplot(mat_corr_parcial,
 
 dev.off()
 
-# .... LASSO con todo ----- #
+# .... LASSO with every variable ----- #
 library(glmnet)
 vars_importantes <- unique(c("price", vars_importantes))
 df <- df[, vars_importantes]
@@ -73,9 +75,9 @@ X <- model.matrix(price ~ ., data = df)[, -1]
 y <- df$price
 cv_lasso <- cv.glmnet(X, y, alpha = 1)
 coef(cv_lasso, s = "lambda.min")
-# Decidimos quedarnos con curbweight como variable de tamaño
+# Curbweight is the most important size variable, as I confirmed with other iterations of this project.
 
-# Alta colinealidad, eliminamos variables de tamaño y dejamos solo curbweight
+# High colineality, we choose now the variables that we want 
 vars_quedan <- c("price","symboling","curbweight", "power_efficiency", 
                          "boreratio", "engine_class_performance", "fueltype_gas", "enginesize"
                         )
@@ -107,72 +109,46 @@ summary(forwAIC)
 summary(forwBIC)
 
 
-# Aplicar los dos ajustes para evaluar como se 
+# We choose the STEP ones and evaluate them
 # desarrollan
 
 fitAIC <- lm(formula(step_aic), data = train.datos)
 fitBIC <- lm(formula(step_bic), data = train.datos)
 summary(fitAIC)
 summary(fitBIC)
-# Quitamos engine_class_performance porque no hay suficiente
-# evidencia para decir que es un buen predictor y no reduce demasiado r2
-# además variables como horsepower contienen información
-#Colinealidad:problema de colinealidad con el ajuste
+# We keep Fueltype_gas, as we can explain a little more of the variance, and 
+# there is no evidence (based on the p-values) that it is not significant.
 car::vif(fitBIC)
 car::vif(fitAIC)
 
-
-# --- No hay problemas de colinealidad ---
-fit_lasso <- lm(price ~ curbweight+ power_efficiency + fueltype_gas+symboling, data = train.datos)
-summary(fit_lasso)
-vif(fit_lasso)
-qqPlot(residuals(fit_lasso))
-library(nortest)
-ad.test(fit_lasso$residuals)
-# 	•	LASSO detectó colinealidad y decidió mantener solo una combinación representativa: por ejemplo, eligió curbweight y citympg (los más informativos).
-#	•	horsepower y enginesize, que estaban correlacionados con curbweight, fueron casi eliminados (coef ≈ 0).
-#	•	fueltype_gas quedó con un coeficiente pequeño pero no nulo.
-# -------
-
-
-#####
-#Verificación de ciertos puntos de metodología que vamos a estudiar más en detalle en adelante
-#####
-
-# El modelo lasso esta ahí, podría ser útil para predicción,
-# pero por interpretabilidad nos mantendremos con BIC.
-# ------ MODELO FINAL ------
+# ------ FINAL MODEL ------
 fit_lm <- lm(price ~ curbweight + power_efficiency+ fueltype_gas, data = train.datos)
 summary(fit_lm)
 # Outliers
 par(mfrow = c(1, 1))
-png("clases hamdi/tarearl/graficos/influencePlot_fitlasso.png", width = 800, height = 600)
+png("graficos/influencePlot_fitlasso.png", width = 800, height = 600)
 influencePlot(fit_lm)
 title("Influence Plot - LM")
 dev.off()
-# Quitamos los outliers que pueden influir
+
 influencePlot(fit_lm)
 title("Influence Plot - Modelo Lasso")
 
+# We can see a some relevant outliers, but we will not remove them, instead
+# we will use a robust regression model.
 
 
-# RLM para los outliers, ya que no queremos deshacernos de ellos por poder ser importantes
-# poca probabilidad de que sean errores de medición
-# Comparación BIC vs RLM
-
-
-#   fit_rlm <- rlm(price ~ curbweight + horsepower + citympg + fueltype_gas, 
-#                    data = train.datos)
 fit_rlm <- rlm(price ~ curbweight + power_efficiency +fueltype_gas,  
             data = train.datos)
 summary(fit_rlm)
 
+# We can see that no t-value falls in the (-2, 2) range, so 
+# there's no evidence that the variables are not significant.
 
-# Recomendación Hacer bootstrap
-# Residuos estandarizados
+# Analysis of assumptions
 resid_lm  <- residuals(fit_lm)
 resid_rlm <- residuals(fit_rlm)# QQ Plot LM
-png("clases hamdi/tarearl/graficos/qqplots_comparacion.png", width = 1200, height = 1000)
+png("graficos/qqplots_comparacion.png", width = 1200, height = 1000)
 # Panel con 2 gráficos lado a lado
 par(mfrow = c(1, 2))
 qqPlot(resid_lm, main = "QQ Plot - LM", col.lines = "blue")
@@ -183,21 +159,31 @@ qqPlot(resid_lm, main = "QQ Plot - LM", col.lines = "blue")
 qqPlot(resid_rlm, main = "QQ Plot - RLM", col.lines = "darkred")
 kurtosis(fit_rlm$residuals)
 skewness(fit_rlm$residuals)
-#Test de normalidad
+
+# As we can see, the residuals of the RLM are a little bit more normal than the LM ones.
+# Normality of residuals tests
 ad.test(fit_rlm$residuals)
 ad.test(fit_lm$residuals)
 cvm.test(fit_rlm$residuals)
 lillie.test(fit_rlm$residuals)
-# Heterocedasticidad y autocorrelación
-dwtest(fit_rlm)
+
+# No we have no evidence to reject the null hypothesis of normality of residuals
+# in the RLM model.
+
+# Homoscedasticity
 bptest(fit_rlm)
+# We have evidence of heteroscedasticity in the RLM model.
+# It's important to consider that the outliers might be affecting this test.
+# We will apply a bootstrap method to estimate CI for the coefficients
+# as a safety measure, but it might not be necessary.
  
 # Spread-level plot
 par(mfrow=c(1,1))
-png('clases hamdi/tarearl/graficos/residuals_vs_fitted_rlm.png',width = 800, height = 600)
+png('graficos/residuals_vs_fitted_rlm.png',width = 800, height = 600)
 spreadLevelPlot(fit_rlm, robust.line = TRUE)
 dev.off()
 spreadLevelPlot(fit_rlm, robust.line = TRUE)
+# We confirm a little bit of heteroscedasticity visualy.
 
 skewness(fit_rlm$residuals)
 kurtosis(fit_rlm$residuals)
@@ -205,7 +191,7 @@ kurtosis(fit_rlm$residuals)
 # ------ BOOTSTRAP -------------- #
 library(boot)
 boot_rlm <- function(data, indices) {
-  # Re-muestreo de los datos
+  # Re-sample
   d <- data[indices, ]
   
   modelo <- rlm(price ~ curbweight + power_efficiency +fueltype_gas, data = d,
@@ -215,18 +201,18 @@ boot_rlm <- function(data, indices) {
 }
 
 boot_result <- boot(data = train.datos, statistic = boot_rlm, R = 1000)
-# Intervalos de Confianza
-# Para el coeficiente de curbweight (index = 2)
+# CI
+# curbweight (index = 2)
 boot.ci(boot_result, type = "perc", index = 2)
 
-# Para fueltype_gas (index = 3)
+# fueltype_gas (index = 3)
 boot.ci(boot_result, type = "perc", index = 3)
 
-# Para power_efficiency (index = 4)
+# power_efficiency (index = 4)
 boot.ci(boot_result, type = "perc", index = 4)
 
-hist(boot_result$t[,2], main = "Distribución bootstrap del coeficiente curbweight", xlab = "Valor coeficiente")
-# Comparativa 
+hist(boot_result$t[,2], main = "Bootstrap distribution of the curbweight coefficient", xlab = "Coefficient value")
+# Comparison 
 pred_lm  <- predict(fit_lm,  newdata = test.datos)
 pred_rlm <- predict(fit_rlm, newdata = test.datos)
 obs <- test.datos$price
@@ -239,12 +225,12 @@ mae_rlm <- mean(abs(test.datos$price - pred_rlm))
 # R² manual (opcional)
 r2_lm  <- 1 - sum((test.datos$price - pred_lm)^2) / sum((test.datos$price - mean(test.datos$price))^2)
 r2_rlm <- 1 - sum((test.datos$price - pred_rlm)^2) / sum((test.datos$price - mean(test.datos$price))^2)
-cat("🔍 Comparación de modelos:\n")
+cat("🔍 Model Comparison:\n")
 cat("LM  - RMSE:", round(rmse_lm, 4), "| MAE:", round(mae_lm, 4), "| R²:", round(r2_lm, 4), "\n")
 cat("RLM - RMSE:", round(rmse_rlm, 4), "| MAE:", round(mae_rlm, 4), "| R²:", round(r2_rlm, 4), "\n")
 
 # -------------------------
-# FUNCIÓN DE TRANSFORMACIÓN
+# TRANFORMATION FUNCTION (SMEARING-DUAN)
 # -------------------------
 
 predict_rlm_real <- function(fit_rlm, newdata) {
@@ -258,46 +244,46 @@ predict_rlm_real <- function(fit_rlm, newdata) {
 }
 
 # -------------------------
-# APLICACIÓN A TEST SET
+# APPLYING THE PREDICTION FUNCTION
 # -------------------------
 
 predicciones <- predict_rlm_real(fit_rlm, test.datos)
 
-# Predicciones
+# Predictions
 pred_log <- predicciones$pred_log
 pred_real <- predicciones$pred_real
 
-# Valores reales
+# Real Values
 obs_log <- test.datos$price
 obs_real <- exp(test.datos$price)
 
-# Errores
+# Errors
 error_log <- obs_log - pred_log
 error_real <- obs_real - pred_real
 
 # -------------------------
-# GRAFICO 1: PREDICCIONES
+# Predicitons
 # -------------------------
 
 par(mfrow = c(1, 2), oma = c(0, 0, 2, 0))
 
 # (A) Predicción en escala log
 plot(obs_log, pred_log,
-     xlab = "Log(Precio) real",
-     ylab = "Log(Precio) predicho",
-     main = "Escala logarítmica",
+     xlab = "Real Log(price)",
+     ylab = "Predicted Log(price)",
+     main = "logarithmic scale",
      pch = 19, col = "steelblue")
 abline(0, 1, col = "red", lwd = 2)
 
 # (B) Predicción en escala real
 plot(obs_real, pred_real,
-     xlab = "Precio real ($)",
-     ylab = "Precio predicho ($)",
-     main = "Escala real corregida",
+     xlab = "Real Price ($)",
+     ylab = "Predicted Price ($)",
+     main = "Real Scale",
      pch = 19, col = "forestgreen")
 abline(0, 1, col = "red", lwd = 2)
 
-mtext("Predicción vs Observado (RLM)", outer = TRUE, cex = 1.4)
+mtext("Prediction vs Real ($)", outer = TRUE, cex = 1.4)
 
 # -------------------------
 # GRAFICO 2: ERRORES
@@ -334,16 +320,16 @@ ggplot(df_pred, aes(x = obs_real, y = pred_real, fill = error_real)) +
   theme_minimal()
 
   # ---- Paneles combinados ------ #
-png('clases hamdi/tarearl/graficos/prediccionescombinadas.png',width = 800, height = 600)
+png('graficos/prediccionescombinadas.png',width = 800, height = 600)
 par(mfrow = c(2, 2))
 
 # (1) log-log
-plot(obs_log, pred_log, main = "Predicción log",
+plot(obs_log, pred_log, main = "Prediction log",
      xlab = "Log(real)", ylab = "Log(pred)", pch = 19, col = "steelblue")
 abline(0, 1, col = "red")
 
 # (2) real-real
-plot(obs_real, pred_real, main = "Predicción real",
+plot(obs_real, pred_real, main = "Prediction real",
      xlab = "Real ($)", ylab = "Predicho ($)", pch = 19, col = "forestgreen")
 abline(0, 1, col = "red")
 
@@ -361,12 +347,12 @@ par(mfrow = c(1,1))
 # ----- Error Absoluto vs Precio ------
 
 plot(obs_real, abs(error_real),
-     xlab = "Precio real ($)", ylab = "|Error| ($)",
-     main = "Error absoluto vs Precio",
+     xlab = "Real price ($)", ylab = "|Error| ($)",
+     main = "Absolute error vs Precio",
      pch = 19, col = "purple")
 
 
-#### ------------ PREDICCIONES DE NIVEL GENERAL ---------------------- #####
+#### ------------ GENERAL PROFILE PREDICTIONS ---------------------- #####
 # BOOTSTRAP
 boot_pred <- function(data, indices, new_list){
   d   <- data[indices, ]
@@ -407,16 +393,24 @@ pred_perfil_real     <- predict_rlm_real(fit_rlm, perfil)$pred_real
 pred_individuo_real  <- predict_rlm_real(fit_rlm, individuo)$pred_real
 
 # IC de predicción en escala real
-boot_real_perfil    <- exp(boot_both$t[, 1])
-boot_real_individuo <- exp(boot_both$t[, 2])
+correction_factor <- mean(exp(fit_rlm$residuals))
+
+boot_real_perfil    <- exp(boot_both$t[, 1]) * correction_factor
+boot_real_individuo <- exp(boot_both$t[, 2]) * correction_factor
 boot_both$t[, 2]
 
 IC_perfil    <- quantile(boot_real_perfil,    c(0.025, 0.975))
 IC_individuo <- quantile(boot_real_individuo, c(0.025, 0.975))
 
 # Reporte
-cat("Pred PERFIL:", round(pred_perfil_real, 0),
+cat("Pred PROFILE:", round(pred_perfil_real, 0),
     "\nIC 95%:", round(IC_perfil[1], 0), "-", round(IC_perfil[2], 0), "\n")
 
-cat("Pred INDIVIDUO:", round(pred_individuo_real, 0),
+cat("Pred INDIVIDUAL:", round(pred_individuo_real, 0),
     "\nIC 95%:", round(IC_individuo[1], 0), "-", round(IC_individuo[2], 0), "\n")
+
+# Results
+# Pred PROFILE: 10216 
+# IC 95%: 9873 - 10570
+# Pred INDIVIDUAL: 12612
+# IC 95%: 12177 - 13056
