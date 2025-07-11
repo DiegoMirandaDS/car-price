@@ -24,7 +24,12 @@ The dataset was obtained from UCI Irvine Machine Learning Repository and contain
 Several transformations and modeling decisions were made to improve linear model assumptions and multicollinearity (after many iterations of the project):
 
 - **Engine Type**:  
-  The original `enginetype` variable had 6 categories, but some of them had very few observations, which made them unreliable for statistical modeling. As shown in the bar chart [`graficos/engine_type_distribution.png`](graficos/engine_price_todos.png), the data was highly imbalanced. To address this and improve model stability, we grouped the engine types into a binary feature: `engine_class_performance`, representing *economy* vs *performance* engines.  
+  The original `enginetype` variable had 6 categories, but some of them had very few observations, which made them unreliable for statistical modeling.  
+As shown in the distribution plot below, the data was highly imbalanced:
+
+![Engine Type Distribution](graficos/engine_price_todos.png)
+
+To address this and improve model stability, we grouped the engine types into a binary feature: `engine_class_performance`, representing *economy* vs *performance* engines.  
 Both versions—6-class and 2-class—showed statistically significant effects on price according to ANOVA, confirming that the simplified version retained meaningful explanatory power (F = 41.33, p < 0.001).
 
 - **Fuel Type**:  
