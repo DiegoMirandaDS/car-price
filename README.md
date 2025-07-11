@@ -71,11 +71,43 @@ Outliers and slight assumption violations led us to prefer a **robust linear reg
 - Influence plots showed a few high-leverage observations.  
 ![Influence Plot](graficos/influencePlot_fitlasso.png)
 
+- The estimated RLM ecuation is:
+  log(price) = −1.913 + 1.411 × log(curbweight) + 0.080 × power_efficiency − 0.151 × fueltype_gas
+
 - Residuals from RLM passed normality tests (Anderson-Darling, Cramér-von Mises, Lilliefors), unlike the OLS model.
 ![QQ plot comparison](graficos/qqplots_comparison.png)
 
 - Some **heteroscedasticity** was detected visually and confirmed via Breusch-Pagan test. It is important to consider that outliers may be affecting the test result.
 ![Residuals vs fitted values](graficos/residuals_vs_fitted_rlm.png)
+
+---
+
+## 🧠 Coefficient Interpretability
+
+One of the main goals of this project was to build a model that is not only predictive but also interpretable.
+
+### 🔍 How to interpret the coefficients?
+
+For log-linear models, the formula to interpret a coefficient β as a **percentage change** in the original (non-log) scale is:
+%Δ Price ≈ (e^β − 1) × 100
+
+#### 📌 Interpretations:
+
+- **log(curbweight) = 1.411**  
+  A 1% increase in curb weight is associated with an approximate **1.41% increase in price**.  
+  Since it's a log-log relationship, the elasticity is 1.411, meaning that price grows slightly more than proportionally with weight.
+
+- **power_efficiency = 0.080**  
+  A 1-unit increase in the horsepower-to-mpg ratio is associated with an **8.35% increase in price**:  
+  `exp(0.0803) − 1 ≈ 0.0835`.
+
+- **fueltype_gas = −0.151**  
+  Cars using gasoline are predicted to be approximately **14% cheaper** than diesel, all else being equal:  
+  `exp(−0.1512) − 1 ≈ −0.14`.
+
+Despite initial statistical insignificance, `fueltype_gas` was retained based on AIC model selection and domain reasoning. Its contribution to residual normality and explained variance (~1%) further supports its inclusion.
+
+These coefficients are not only statistically significant but also provide useful insights for automotive pricing and valuation analysis.
 
 ---
 
