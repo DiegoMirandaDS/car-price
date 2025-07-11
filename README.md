@@ -69,13 +69,13 @@ However, its inclusion in the model affected the normality of residuals, so a lo
 Outliers and slight assumption violations led us to prefer a **robust linear regression** model (`rlm`) over classic OLS.
 
 - Influence plots showed a few high-leverage observations.  
-! [Influence Plot](graficos/influencePlot_fitlasso.png)
+![Influence Plot](graficos/influencePlot_fitlasso.png)
 
 - Residuals from RLM passed normality tests (Anderson-Darling, Cramér-von Mises, Lilliefors), unlike the OLS model.
-📊 QQ Plots: ![QQ plot comparison](graficos/qqplots_comparison.png)
+![QQ plot comparison](graficos/qqplots_comparison.png)
 
 - Some **heteroscedasticity** was detected visually and confirmed via Breusch-Pagan test. It is important to consider that outliers may be affecting the test result.
-Plot: ![Residuals vs fitted values](graficos/residuals_vs_fitted_rlm.png)
+![Residuals vs fitted values](graficos/residuals_vs_fitted_rlm.png)
 
 ---
 
@@ -88,7 +88,8 @@ Plot: ![Residuals vs fitted values](graficos/residuals_vs_fitted_rlm.png)
 
 RLM shows better residual distribution and predictive accuracy, both in error magnitude and R².  
 
-📊 Prediction vs Real: [`graficos/prediccionescombinadas.png`](graficos/prediccionescombinadas.png)
+📊 Predictions: 
+![Predictions](graficos/prediccionescombinadas.png)
 
 (To obtain real price predictions, we applied Duan’s smearing estimator to the exponentiated log-predictions to reduce bias.”
 )
