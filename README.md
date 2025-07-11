@@ -75,9 +75,11 @@ Outliers and slight assumption violations led us to prefer a **robust linear reg
   log(price) = −1.913 + 1.411 × log(curbweight) + 0.080 × power_efficiency − 0.151 × fueltype_gas
 
 - Residuals from RLM passed normality tests (Anderson-Darling, Cramér-von Mises, Lilliefors), unlike the OLS model.
+  
 ![QQ plot comparison](graficos/qqplots_comparison.png)
 
 - Some **heteroscedasticity** was detected visually and confirmed via Breusch-Pagan test. It is important to consider that outliers may be affecting the test result.
+  
 ![Residuals vs fitted values](graficos/residuals_vs_fitted_rlm.png)
 
 ---
