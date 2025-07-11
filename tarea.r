@@ -55,7 +55,7 @@ pc_all <- pcor(df[, vars_importantes])          # matriz de correlaciones parcia
 round(pc_all$estimate, 2)
 round(pc_all$p.value , 3)
 mat_corr_parcial <- round(pc_all$estimate, 2)
-png("graficos/correlacion_parcial.png", width = 2000, height = 2000, res = 300)
+png("graficos/partial_correlations.png", width = 2000, height = 2000, res = 300)
 corrplot(mat_corr_parcial,
          method = "color",         # o "circle", "number", "shade", etc.
          type = "upper",
@@ -148,7 +148,7 @@ summary(fit_rlm)
 # Analysis of assumptions
 resid_lm  <- residuals(fit_lm)
 resid_rlm <- residuals(fit_rlm)# QQ Plot LM
-png("graficos/qqplots_comparacion.png", width = 1200, height = 1000)
+png("graficos/qqplots_comparison.png", width = 1200, height = 1000)
 # Panel con 2 gráficos lado a lado
 par(mfrow = c(1, 2))
 qqPlot(resid_lm, main = "QQ Plot - LM", col.lines = "blue")
