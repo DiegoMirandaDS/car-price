@@ -46,9 +46,9 @@ However, its inclusion in the model affected the normality of residuals, so a lo
 - **Transformations**:
   - Target variable `price` was log-transformed to improve residual normality.
   - `curbweight` was also log-transformed.
-  - Standard correlation (`kendall`) was used to evaluate feature redundancy.  
-    📊 Plots: [`graficos/corrplot.png`](graficos/corrplot.png)
-
+  - `kendall` correlation was used to evaluate feature redundancy.  
+  ![Correlation Plot](graficos/corrplot.png)
+    
 ---
 
 ## 🧪 Modeling Process
@@ -69,13 +69,13 @@ However, its inclusion in the model affected the normality of residuals, so a lo
 Outliers and slight assumption violations led us to prefer a **robust linear regression** model (`rlm`) over classic OLS.
 
 - Influence plots showed a few high-leverage observations.  
-Plot: [`graficos/influencePlot_fitlasso.png`](graficos/influencePlot_fitlasso.png)
+! [Influence Plot](graficos/influencePlot_fitlasso.png)
 
 - Residuals from RLM passed normality tests (Anderson-Darling, Cramér-von Mises, Lilliefors), unlike the OLS model.
-📊 QQ Plots: [`graficos/qqplots_comparison.png`](graficos/qqplots_comparison.png)
+📊 QQ Plots: ![QQ plot comparison](graficos/qqplots_comparison.png)
 
 - Some **heteroscedasticity** was detected visually and confirmed via Breusch-Pagan test. It is important to consider that outliers may be affecting the test result.
-Plot: [`graficos/residuals_vs_fitted_rlm.png`](graficos/residuals_vs_fitted_rlm.png)
+Plot: ![Residuals vs fitted values](graficos/residuals_vs_fitted_rlm.png)
 
 ---
 
@@ -90,7 +90,8 @@ RLM shows better residual distribution and predictive accuracy, both in error ma
 
 📊 Prediction vs Real: [`graficos/prediccionescombinadas.png`](graficos/prediccionescombinadas.png)
 
-(Real predictions were calculed using the Smearing Duan estimation apllied to de exponencial of the logprediction, to elude bias in the value)
+(To obtain real price predictions, we applied Duan’s smearing estimator to the exponentiated log-predictions to reduce bias.”
+)
 
 ---
 
