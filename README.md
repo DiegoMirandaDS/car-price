@@ -29,7 +29,7 @@ As shown in the distribution plot below, the data was highly imbalanced:
 
 ![Engine Type Distribution](graficos/engine_price_todos.png)
 
-To address this and improve model stability, we grouped the engine types into a binary feature: `engine_class_performance`, representing *economy* vs *performance* engines.  
+  To address this and improve model stability, we grouped the engine types into a binary feature: `engine_class_performance`, representing *economy* vs *performance* engines.  
 Both versions—6-class and 2-class—showed statistically significant effects on price according to ANOVA, confirming that the simplified version retained meaningful explanatory power (F = 41.33, p < 0.001).
 
 - **Fuel Type**:  
