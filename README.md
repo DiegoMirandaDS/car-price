@@ -74,7 +74,7 @@ Plot: [`graficos/influencePlot_fitlasso.png`](graficos/influencePlot_fitlasso.pn
 - Residuals from RLM passed normality tests (Anderson-Darling, Cramér-von Mises, Lilliefors), unlike the OLS model.
 📊 QQ Plots: [`graficos/qqplots_comparison.png`](graficos/qqplots_comparison.png)
 
-- Some **heteroscedasticity** was detected visually and confirmed via Breusch-Pagan test.  
+- Some **heteroscedasticity** was detected visually and confirmed via Breusch-Pagan test. It is important to consider that outliers may be affecting the test result.
 Plot: [`graficos/residuals_vs_fitted_rlm.png`](graficos/residuals_vs_fitted_rlm.png)
 
 ---
@@ -87,16 +87,26 @@ Plot: [`graficos/residuals_vs_fitted_rlm.png`](graficos/residuals_vs_fitted_rlm.
 | **RLM** | 0.2112 | 0.1824 | 0.7273 |
 
 RLM shows better residual distribution and predictive accuracy, both in error magnitude and R².  
+
 📊 Prediction vs Real: [`graficos/prediccionescombinadas.png`](graficos/prediccionescombinadas.png)
+
+(Real predictions were calculed using the Smearing Duan estimation apllied to de exponencial of the logprediction, to elude bias in the value)
 
 ---
 
 ## 📦 Bootstrap Confidence Intervals
 
-To ensure stability of coefficients and predictions under heteroscedasticity, we applied non-parametric **bootstrap** with 1,000 resamples:
+To ensure the robustness of the model under mild heteroscedasticity and the presence of outliers, we applied a non-parametric **bootstrap** procedure with 1,000 resamples.
 
-- Confidence intervals for all regression coefficients
-- Resampled predictions for individual cases
+This allowed us to estimate confidence intervals for the model coefficients:
+
+### 📌 Coefficient Intervals (95% Percentile Bootstrap)
+
+- **log(curbweight)**: (1.024, 1.814)  
+- **fueltype_gas**: (0.0441, 0.1136)  
+- **power_efficiency**: (−0.2953, −0.0092)
+
+Additionally, bootstrap was used to estimate confidence intervals for specific predictions, including a general buyer profile and a real car example (see [Predictions & Application](#-predictions--application)).
 
 ---
 
@@ -127,8 +137,8 @@ A car with median values for all features:
 
 ## 🧾 Summary
 
-- Engine type simplification and feature engineering were crucial to reduce multicollinearity.
-- Robust regression offered superior residual behavior and predictive performance.
+- Power Efficiency and logcurbweight transformations (feature engineering in general) were crucial to reduce multicollinearity and stabilize the residuals normality.
+- Robust regression offered superior residual behavior.
 - Duan’s retransformation and bootstrapping provided confidence intervals for both predictions and coefficients.
 - The final model offers an interpretable, resilient and reproducible solution to car price prediction.
 
