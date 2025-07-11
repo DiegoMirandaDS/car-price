@@ -88,7 +88,7 @@ Outliers and slight assumption violations led us to prefer a **robust linear reg
 
 RLM shows better residual distribution and predictive accuracy, both in error magnitude and R².  
 
-📊 Predictions: 
+📊 Predictions (RLM): 
 ![Predictions](graficos/prediccionescombinadas.png)
 
 (To obtain real price predictions, we applied Duan’s smearing estimator to the exponentiated log-predictions to reduce bias.”
